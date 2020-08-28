@@ -1,0 +1,29 @@
+#!/bin/bash
+NOW=$(date +"%m-%d-%Y-%H-%M-%S")
+echo $NOW
+cat .aws/ec2credentials > .aws/credentials
+apt install ec2-api-tools
+deleteami=`cat delete-ami.txt`
+aws ec2 deregister-image --image-id "$deleteami"
+
+#aws ec2 delete-snapshot --snapshot-id snap-1234567890abcdef0
+
+#ec2-create-image --region ap-south-1 -n `date +%F`-test --no-reboot i-0e185e85a4a50ddd1 | awk '{print $2}' > ami.txt
+ec2-create-image --region ap-south-1 -n $NOW-test --no-reboot i-0e185e85a4a50ddd1 | awk '{print $2}' > ami.txt
+cat ami.txt >> old-ami.txt
+cat ami.txt > delete-ami.txt
+##deleteami=`cat delete-ami.txt`
+
+ami=`cat ami.txt`
+#cp ami.txt old-ami.txt
+#oldami=`cat old-ami.txt`
+#ec2-create-image --region ap-south-1 -n `date +%F`-test --no-reboot i-0e185e85a4a50ddd1 | awk '{print $2}'
+echo $ami
+##echo $deleteami
+aws autoscaling update-auto-scaling-group --auto-scaling-group-name 'shedule-Av-staging-scaling-group' --launch-configuration-name test
+
+aws autoscaling delete-launch-configuration --launch-configuration-name 'shri'
+
+aws autoscaling create-launch-configuration --region 'ap-south-1' --launch-configuration-name 'shri' --image-id "$ami" --instance-type 'm5a.12xlarge' --iam-instance-profile 'CRosAcountRoleB' --instance-monitoring Enabled=true --block-device-mappings file://mapping.json --security-groups 'av staging database' --key-name 'autoscaling-staging-av'
+
+aws autoscaling update-auto-scaling-group --auto-scaling-group-name 'shedule-Av-staging-scaling-group' --launch-configuration-name 'shri'
