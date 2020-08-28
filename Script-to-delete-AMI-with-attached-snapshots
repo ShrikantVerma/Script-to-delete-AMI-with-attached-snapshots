@@ -1,0 +1,35 @@
+#!/bin/bash
+#Shrikant Verma
+#Script to delete ami with attached snapshots.
+
+#Take input of AMI to be deleted.
+echo -e "$1" > /tmp/imageid.txt
+
+#Find snapshots associated with AMI.
+aws ec2 describe-images --image-ids `cat /tmp/imageid.txt` | grep snap | awk ' { print $4 }' > /tmp/snap.txt
+
+echo -e "Following are the snapshots associated with it : `cat /tmp/snap.txt`:\n "
+ 
+ echo -e "Starting the Deregister of AMI... \n"
+
+#Deregistering the AMI 
+aws ec2 deregister-image --image-id `cat /tmp/imageid.txt`
+
+echo -e "\nDeleting the associated snapshots.... \n"
+
+#Deleting snapshots attached to AMI
+for i in `cat /tmp/snap.txt`;do aws ec2 delete-snapshot --snapshot-id $i ; done
+
+Pass the AMI id as a parameter to script to see the magic..
+
+Script output:
+[root@ip-10-0-1-55 ravi]# ./amiremove.sh ami-34d08d66
+Following are the snapshots associated with it : snap-cba6b326
+snap-c4akljlkj
+snap-cjnlkdlkl
+snap-aaalmalkm:
+ 
+Starting the Deregister of AMI... 
+
+
+Deleting the associated snapshots.... 
